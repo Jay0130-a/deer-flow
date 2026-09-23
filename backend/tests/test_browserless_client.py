@@ -857,3 +857,19 @@ class TestBrowserlessTools:
         assert "Thread outputs path is not available" in result.update["messages"][0].content
         assert "artifacts" not in result.update
         mock_get_client.assert_not_called()
+
+
+class TestAsStrList:
+    """Regression: web_fetch must read reject_* keys from config (#5713)."""
+
+    def test_list_input(self):
+        assert tools._as_str_list(["image", "media"]) == ["image", "media"]
+
+    def test_comma_string(self):
+        assert tools._as_str_list("image, media,font") == ["image", "media", "font"]
+
+    def test_empty_values(self):
+        assert tools._as_str_list(None) is None
+        assert tools._as_str_list("") is None
+        assert tools._as_str_list([]) is None
+        assert tools._as_str_list(123) is None

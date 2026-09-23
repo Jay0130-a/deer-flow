@@ -121,6 +121,16 @@ def _as_optional_quality(value: object, output_format: str) -> int | None:
     return quality if 0 <= quality <= 100 else None
 
 
+def _as_str_list(value: object) -> list[str] | None:
+    """Tolerantly read a list[str] config value (YAML list or comma-separated)."""
+    if isinstance(value, list):
+        items = [str(v).strip() for v in value if str(v).strip()]
+        return items or None
+    if isinstance(value, str) and value.strip():
+        items = [v.strip() for v in value.split(",") if v.strip()]
+        return items or None
+    return None
+
 def _normalize_output_format(value: object) -> str:
     output_format = str(value or "png").strip().lower()
     return output_format if output_format in _OUTPUT_FORMAT_TO_EXTENSION else "png"
@@ -256,6 +266,8 @@ async def web_fetch_tool(url: str) -> str:
         wait_for_timeout_ms = _as_int(cfg.get("wait_for_timeout_ms"), wait_for_timeout_ms)
         wait_for_selector = cfg.get("wait_for_selector", wait_for_selector)
         wait_for_selector_timeout_ms = _as_int(cfg.get("wait_for_selector_timeout_ms"), wait_for_selector_timeout_ms)
+        reject_resource_types = _as_str_list(cfg.get("reject_resource_types"))
+        reject_request_pattern = _as_str_list(cfg.get("reject_request_pattern"))
 
         client = _get_browserless_client("web_fetch")
         result = await client.fetch_html_with_status(
